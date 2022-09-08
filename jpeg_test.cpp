@@ -5,6 +5,7 @@
 
 #include <jpeglib.h>
 #include <opencv2/opencv.hpp>
+#include <turbojpeg.h>
 
 
 int main(int argc, char **argv) {
@@ -63,6 +64,26 @@ int main(int argc, char **argv) {
     std::cout << "img size: " << std::distance(img.datastart, img.dataend) << std::endl;
     std::cout << "img dim: " << img.size() << " x " << img.channels() << std::endl;
     std::cout << "OpenCV time (ms): " << std::chrono::duration<float, std::milli>(tend - tstart).count() << std::endl;
+    }
+
+    // TurboJPEG
+    {
+    const auto tstart = std::chrono::high_resolution_clock::now();
+
+    tjhandle _jpegDecompressor = tjInitDecompress();
+
+    int width, height;
+    tjDecompressHeader(_jpegDecompressor, const_cast<uint8_t *>(data.data()), data.size(), &width, &height);
+
+    std::vector<uint8_t> img_buffer(width*height*3);
+    tjDecompress2(_jpegDecompressor, data.data(), data.size(), img_buffer.data(), width, 0, height, TJPF_RGB, TJFLAG_FASTDCT);
+    tjDestroy(_jpegDecompressor);
+
+    const auto tend = std::chrono::high_resolution_clock::now();
+
+    std::cout << "img size: " << img_buffer.size() << std::endl;
+    std::cout << "img dim: " << width << " x " << height << " x " << 3 << std::endl;
+    std::cout << "TurboJPEG time (ms): " << std::chrono::duration<float, std::milli>(tend - tstart).count() << std::endl;
     }
 
     return EXIT_SUCCESS;

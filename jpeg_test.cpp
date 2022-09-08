@@ -8,6 +8,17 @@
 #include <turbojpeg.h>
 
 
+void ppm_save(const std::vector<uint8_t> &img_buffer, const int width, const int height, const std::string &path) {
+    std::ofstream f;
+    f.open(path.c_str(), std::ofstream::binary);
+    // header
+    f << "P6" << std::endl << width << " " << height << std::endl << 0xFF << std::endl;
+    // data
+    f.write((char*)img_buffer.data(), img_buffer.size());
+    f.close();
+}
+
+
 int main(int argc, char **argv) {
     if(argc != 2) {
         std::cout << "provide jpeg image path" << std::endl;
@@ -54,6 +65,8 @@ int main(int argc, char **argv) {
     std::cout << "img size: " << img_buffer.size() << std::endl;
     std::cout << "img dim: " << cinfo.output_width << " x " << cinfo.output_height << " x " << cinfo.output_components << std::endl;
     std::cout << "JPEG time (ms): " << std::chrono::duration<float, std::milli>(tend - tstart).count() << std::endl;
+
+    ppm_save(img_buffer, cinfo.output_width, cinfo.output_height, "/tmp/a.ppm");
     }
 
     // OpenCV
@@ -64,6 +77,9 @@ int main(int argc, char **argv) {
     std::cout << "img size: " << std::distance(img.datastart, img.dataend) << std::endl;
     std::cout << "img dim: " << img.size() << " x " << img.channels() << std::endl;
     std::cout << "OpenCV time (ms): " << std::chrono::duration<float, std::milli>(tend - tstart).count() << std::endl;
+
+    const std::vector<uint8_t> data(img.begin<uint8_t>(), img.end<uint8_t>());
+    ppm_save(data, img.cols, img.rows, "/tmp/b.ppm");
     }
 
     // TurboJPEG
@@ -84,6 +100,8 @@ int main(int argc, char **argv) {
     std::cout << "img size: " << img_buffer.size() << std::endl;
     std::cout << "img dim: " << width << " x " << height << " x " << 3 << std::endl;
     std::cout << "TurboJPEG time (ms): " << std::chrono::duration<float, std::milli>(tend - tstart).count() << std::endl;
+
+    ppm_save(img_buffer, width, height, "/tmp/c.ppm");
     }
 
     return EXIT_SUCCESS;

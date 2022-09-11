@@ -39,6 +39,10 @@ int main(int argc, char **argv) {
     struct jpeg_error_mgr jerr;
 
     cinfo.err = jpeg_std_error(&jerr);
+
+    // silence all messages
+    cinfo.err->output_message = [](j_common_ptr cinfo){};
+
     jpeg_create_decompress(&cinfo);
 
     jpeg_mem_src(&cinfo, data.data(), data.size());
